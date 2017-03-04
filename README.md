@@ -7,6 +7,15 @@ A TensorFlow Implementation of:
 **NOTE:** In this repository, we only implement the VGG16 version.
 
 
+## Requirements
+
+1. TensorFlow r0.10 (r0.11 should be fine, not sure if this can work for later versions)
+
+2. OpenCV 2 and its Python bindings
+
+3. Ipdb: IPython environment python debugger.
+
+
 ## Prepare dataset
 
 In this implementation, we use the [VOC2011 dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2011/). Please do as follows to set up the dataset:
