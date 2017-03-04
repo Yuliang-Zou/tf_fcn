@@ -42,7 +42,7 @@ You can change the `config` dictionary to use custom settings.
 
 ## Demo
 
-```base
+```bash
 cd src
 python demo.py
 ```
