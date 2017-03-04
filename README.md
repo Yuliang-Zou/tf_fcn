@@ -15,7 +15,7 @@ In this implementation, we use the [VOC2011 dataset](http://host.robots.ox.ac.uk
 
 2. Download the train/val dataset and Development kit tar files, put them under the `data` folder. Unzip Development kit tar file, then unzip train/val tar file and rename the folder as `VOC2011`.
 
-3. It should have theis basic structure (under `data` directory)
+3. It should have this basic structure (under `data` directory)
 
 ```bash
 $ VOCdevkit/                      # development kit
@@ -27,7 +27,9 @@ $ VOCdevkit/VOC2011               # image sets, annotations, etc.
 
 ## Pre-trained model
 
-We use a ImageNet pre-trained model to initialize the network, please download the npy file [here](https://drive.google.com/file/d/0B2SnTpv8L4iLRTFZb0FWenRJTlU/view?usp=sharing)
+`mkdir model`
+
+We use a ImageNet pre-trained model to initialize the network, please download the npy file [here](https://drive.google.com/file/d/0B2SnTpv8L4iLRTFZb0FWenRJTlU/view?usp=sharing) and put it under the `model` folder.
 
 
 ## How to train
