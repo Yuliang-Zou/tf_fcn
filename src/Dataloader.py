@@ -7,11 +7,15 @@ import ipdb
 import numpy as np
 from os.path import join
 from util import colormap, prep_im_for_blob
+import multiprocessing
 
 """
 The Dataloader for VOC2011 to load and preprocess input image and segmentation
 ground truth. (Only)
 """
+def prep_run_wrapper(args):
+	return prep_im_for_blob(*args)
+
 class Dataloader(object):
 	def __init__(self, split, batch_num):
 		# Validate split input
@@ -49,25 +53,34 @@ class Dataloader(object):
 		img_blobs = []
 		seg_blobs = []
 		mask_blobs = []
-
-		for _ in xrange(self.batch_num):
+		process_size = 5
+		# process mini_batch as 5 process, require that the number of 
+		# sample in a mini_batch is a multiplying of 5
+		for _ in xrange(self.batch_num/process_size):
 			# Permutate the data again
-			if self.temp_pointer == self.num_images:
+
+			if self.temp_pointer+process_size > self.num_images:
 				self.temp_pointer = 0
 				self._shuffle()
 
-			img_name = self._img_at(self.temp_pointer)
-			seg_name = self._seg_at(self.temp_pointer)
-			img_blob, seg_blob, mask = prep_im_for_blob(img_name, seg_name, self.rgb_to_gray)
-			self.temp_pointer += 1
+			temp_range = range(self.temp_pointer, self.temp_pointer+process_size, 1)
+			temp_imName = [self._img_at(x) for x in temp_range]
+			temp_segName = [self._seg_at(x) for x in temp_range]
+			temp_map = [self.rgb_to_gray,]*process_size
 
-			img_blobs.append(img_blob)
-			seg_blobs.append(seg_blob)
-			mask_blobs.append(mask)
+			p = multiprocessing.Pool(process_size)
 
-		img_blobs = np.array(img_blobs)
-		seg_blobs = np.array(seg_blobs)
-		mask_blobs = np.array(mask_blobs)
+			temp_result = p.map(prep_run_wrapper, zip(temp_imName, temp_segName, temp_map))
+			p.close()
+			p.join()
+
+			for x in temp_result:
+				img_blobs.append(x['im_blob'])
+				seg_blobs.append(x['seg_blob'])
+				mask_blobs.append(x['mask'])
+
+			self.temp_pointer += process_size
+
 
 		return [img_blobs, seg_blobs, mask_blobs]
 
