@@ -33,10 +33,10 @@ config = {
 
 if __name__ == '__main__':
 	model = FCN32(config)
-	data_loader = Dataloader('val', config['batch_num'])
+	data_loader = Dataloader('train', config['batch_num'])
 
 	saver = tf.train.Saver()
-	ckpt = '../model/FCN32_1e-3_iter_5000.ckpt'
+	ckpt = '../model/FCN32_5e-3_iter_5000.ckpt'
 
 	with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 		saver.restore(session, ckpt)
@@ -51,7 +51,10 @@ if __name__ == '__main__':
 		for i in range(config['batch_num']):
 			mask = minibatch[2][i]
 			seg  = np.argmax(pred[i], axis=2)
-			plt.imshow(seg)
-			plt.show()
-			plt.imshow(minibatch[0][i])
+			img  = minibatch[0][i]
+			gt   = minibatch[1][i][:,:,0]
+			f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
+			ax1.imshow(seg)
+			ax2.imshow(img)
+			ax3.imshow(gt)
 			plt.show()

@@ -5,6 +5,7 @@
 
 import tensorflow as tf
 import numpy as np
+from util import bilinear_upsample_weights
 import ipdb
 
 """Define a base class, containing some useful layer functions"""
@@ -300,18 +301,25 @@ class FCN32(Network):
 
 	def set_up(self):
 		self.add_conv(self.img, self.num_classes)
-		self.add_deconv()
+		self.add_deconv(bilinear=True)
 		self.add_loss_op()
 		self.add_weight_decay()
 		self.add_train_op()
 
 	"""Add the deconv(upsampling) layer to get dense prediction"""
-	def add_deconv(self):
+	def add_deconv(self, bilinear=False):
 		conv8 = self.get_output('conv8')
 
 		with tf.variable_scope('deconv') as scope:
-			w_deconv = tf.get_variable('weights', [64, 64, self.num_classes, self.num_classes],
-				initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			# Learn from scratch
+			if not bilinear:
+				w_deconv = tf.get_variable('weights', [64, 64, self.num_classes, self.num_classes],
+					initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			# Using fiexed bilinearing upsampling filter
+			else:
+				w_deconv = tf.get_variable('weights', trainable=False, 
+					initializer=bilinear_upsample_weights(32, self.num_classes))
+
 			b_deconv = tf.get_variable('biases', [self.num_classes],
 				initializer=tf.constant_initializer(0))
 			z_deconv = tf.nn.conv2d_transpose(conv8, w_deconv, 
@@ -351,12 +359,12 @@ class FCN32(Network):
 
 if __name__ == '__main__':
 	config = {
-	'batch_num':20, 
+	'batch_num':5, 
 	'iter':100000, 
 	'num_classes':21, 
 	'max_size':(640,640),
 	'weight_decay': 0.0005,
-	'base_lr': 0.0001,
+	'base_lr': 0.005,
 	'momentum': 0.9
 	}
 
