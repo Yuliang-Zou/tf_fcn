@@ -7,14 +7,12 @@ import ipdb
 import numpy as np
 from os.path import join
 from util import colormap, prep_im_for_blob
-import multiprocessing
+from pathos.multiprocessing import ProcessingPool as Pool
 
 """
 The Dataloader for VOC2011 to load and preprocess input image and segmentation
 ground truth. (Only)
 """
-def prep_run_wrapper(args):
-	return prep_im_for_blob(*args)
 
 class Dataloader(object):
 	def __init__(self, split, batch_num):
@@ -68,11 +66,9 @@ class Dataloader(object):
 			temp_segName = [self._seg_at(x) for x in temp_range]
 			temp_map = [self.rgb_to_gray,]*process_size
 
-			p = multiprocessing.Pool(process_size)
 
-			temp_result = p.map(prep_run_wrapper, zip(temp_imName, temp_segName, temp_map))
-			p.close()
-			p.join()
+			temp_result = Pool().map(prep_im_for_blob, temp_imName, temp_segName, temp_map)
+
 
 			for x in temp_result:
 				img_blobs.append(x['im_blob'])
@@ -89,4 +85,4 @@ if __name__ == '__main__':
 	dataloader = Dataloader('train', 5)
 	feed_dict = dataloader.get_next_minibatch()
 
-	ipdb.set_trace()
+	#ipdb.set_trace()
