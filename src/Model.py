@@ -317,7 +317,7 @@ class FCN32(Network):
 					initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
 			# Using fiexed bilinearing upsampling filter
 			else:
-				w_deconv = tf.get_variable('weights', trainable=False, 
+				w_deconv = tf.get_variable('weights', trainable=True, 
 					initializer=bilinear_upsample_weights(32, self.num_classes))
 
 			b_deconv = tf.get_variable('biases', [self.num_classes],
@@ -357,6 +357,191 @@ class FCN32(Network):
 			self.momentum).minimize(self.loss)
 
 
+"""A better model"""
+class FCN16(FCN32):
+	def __init__(self, config):
+		FCN32.__init__(self, config)
+
+	def set_up(self):
+		self.add_conv(self.img, self.num_classes)
+		self.add_shortcut(bilinear=True)
+		self.add_deconv(bilinear=True)
+		self.add_loss_op()
+		self.add_weight_decay()
+		self.add_train_op()
+
+	def add_shortcut(self, bilinear=False):
+		conv8 = self.get_output('conv8')
+		target_size = 2 * int(conv8.get_shape()[1])
+
+		with tf.variable_scope('2x_conv8') as scope:
+			# Learn from scratch
+			if not bilinear:
+				w_deconv = tf.get_variable('weights', [4, 4, self.num_classes, self.num_classes],
+					initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			# Using fiexed bilinearing upsampling filter
+			else:
+				w_deconv = tf.get_variable('weights', trainable=True, 
+					initializer=bilinear_upsample_weights(2, self.num_classes))
+
+			b_deconv = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_deconv = tf.nn.conv2d_transpose(conv8, w_deconv, 
+				[self.batch_num, target_size, target_size, self.num_classes],
+				strides=[1,2,2,1], padding='SAME', name='z') + b_deconv
+
+		pool4 = self.get_output('pool4')
+
+		with tf.variable_scope('pool4_1x1') as scope:
+			w_pool4 = tf.get_variable('weights', [1, 1, 512, self.num_classes],
+				initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			b_pool4 = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_pool4 = tf.nn.conv2d(pool4, w_pool4, strides= [1, 1, 1, 1],
+				padding='SAME') + b_pool4
+
+		# Element-wise sum
+		fusion = z_deconv + z_pool4
+
+		# Add to store dicts
+		self.outputs['2x_conv8'] = z_deconv
+		self.outputs['pool4_1x1'] = z_pool4
+		self.outputs['fusion'] = fusion
+		self.layers['2x_conv8']  = {'weights':w_deconv, 'biases':b_deconv}
+		self.layers['pool4_1x1'] = {'weights':w_pool4, 'biases':b_pool4}
+
+
+	"""Add the deconv(upsampling) layer to get dense prediction"""
+	def add_deconv(self, bilinear=False):
+		fusion = self.get_output('fusion')
+
+		with tf.variable_scope('deconv') as scope:
+			# Learn from scratch
+			if not bilinear:
+				w_deconv = tf.get_variable('weights', [32, 32, self.num_classes, self.num_classes],
+					initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			# Using fiexed bilinearing upsampling filter
+			else:
+				w_deconv = tf.get_variable('weights', trainable=True, 
+					initializer=bilinear_upsample_weights(16, self.num_classes))
+
+			b_deconv = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_deconv = tf.nn.conv2d_transpose(fusion, w_deconv, 
+				[self.batch_num, self.max_size[0], self.max_size[1], self.num_classes],
+				strides=[1,16,16,1], padding='SAME', name='z') + b_deconv
+
+		# Add to store dicts
+		self.outputs['deconv'] = z_deconv
+		self.layers['deconv']  = {'weights':w_deconv, 'biases':b_deconv}
+
+
+"""The best model"""
+class FCN8(FCN16):
+	def __init__(self, config):
+		FCN16.__init__(self, config)
+
+	def add_shortcut(self, bilinear=True):
+		conv8 = self.get_output('conv8')
+		target_size = 2 * int(conv8.get_shape()[1])
+
+		with tf.variable_scope('2x_conv8') as scope:
+			# Learn from scratch
+			if not bilinear:
+				w_deconv = tf.get_variable('weights', [4, 4, self.num_classes, self.num_classes],
+					initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			# Using fiexed bilinearing upsampling filter
+			else:
+				w_deconv = tf.get_variable('weights', trainable=True, 
+					initializer=bilinear_upsample_weights(2, self.num_classes))
+
+			b_deconv = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_deconv = tf.nn.conv2d_transpose(conv8, w_deconv, 
+				[self.batch_num, target_size, target_size, self.num_classes],
+				strides=[1,2,2,1], padding='SAME', name='z') + b_deconv
+
+		pool4 = self.get_output('pool4')
+
+		with tf.variable_scope('pool4_1x1') as scope:
+			w_pool4 = tf.get_variable('weights', [1, 1, 512, self.num_classes],
+				initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			b_pool4 = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_pool4 = tf.nn.conv2d(pool4, w_pool4, strides= [1, 1, 1, 1],
+				padding='SAME') + b_pool4
+
+		# Element-wise sum
+		fusion1 = z_deconv + z_pool4
+
+		## Second fusion stage
+		pool3 = self.get_output('pool3')
+
+		with tf.variable_scope('pool3_1x1') as scope:
+			w_pool3 = tf.get_variable('weights', [1, 1, 256, self.num_classes],
+				initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			b_pool3 = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_pool3 = tf.nn.conv2d(pool3, w_pool3, strides= [1, 1, 1, 1],
+				padding='SAME') + b_pool3
+
+		target_size *= 2
+
+		with tf.variable_scope('2x_fusion') as scope:
+			# Learn from scratch
+			if not bilinear:
+				w_deconv2 = tf.get_variable('weights', [4, 4, self.num_classes, self.num_classes],
+					initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			# Using fiexed bilinearing upsampling filter
+			else:
+				w_deconv2 = tf.get_variable('weights', trainable=True, 
+					initializer=bilinear_upsample_weights(2, self.num_classes))
+
+			b_deconv2 = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_deconv2 = tf.nn.conv2d_transpose(fusion1, w_deconv2, 
+				[self.batch_num, target_size, target_size, self.num_classes],
+				strides=[1,2,2,1], padding='SAME', name='z') + b_deconv2
+
+		fusion2 = z_pool3 + z_deconv2
+
+		# Add to store dicts
+		self.outputs['2x_conv8'] = z_deconv
+		self.outputs['pool4_1x1'] = z_pool4
+		self.outputs['pool3_1x1'] = z_pool3
+		self.outputs['2x_fusion'] = z_deconv2
+		self.outputs['fusion'] = fusion2
+		self.layers['2x_conv8']  = {'weights':w_deconv, 'biases':b_deconv}
+		self.layers['pool4_1x1'] = {'weights':w_pool4, 'biases':b_pool4}
+		self.layers['pool3_1x1'] = {'weights':w_pool3, 'biases':b_pool3}
+		self.layers['2x_fusion'] = {'weights':w_deconv2, 'biases':b_deconv2}
+
+
+	"""Add the deconv(upsampling) layer to get dense prediction"""
+	def add_deconv(self, bilinear=False):
+		fusion = self.get_output('fusion')
+
+		with tf.variable_scope('deconv') as scope:
+			# Learn from scratch
+			if not bilinear:
+				w_deconv = tf.get_variable('weights', [16, 16, self.num_classes, self.num_classes],
+					initializer=tf.truncated_normal_initializer(0.0, stddev=0.01))
+			# Using fiexed bilinearing upsampling filter
+			else:
+				w_deconv = tf.get_variable('weights', trainable=True, 
+					initializer=bilinear_upsample_weights(16, self.num_classes))
+
+			b_deconv = tf.get_variable('biases', [self.num_classes],
+				initializer=tf.constant_initializer(0))
+			z_deconv = tf.nn.conv2d_transpose(fusion, w_deconv, 
+				[self.batch_num, self.max_size[0], self.max_size[1], self.num_classes],
+				strides=[1,8,8,1], padding='SAME', name='z') + b_deconv
+
+		# Add to store dicts
+		self.outputs['deconv'] = z_deconv
+		self.layers['deconv']  = {'weights':w_deconv, 'biases':b_deconv}
+
+
 if __name__ == '__main__':
 	config = {
 	'batch_num':5, 
@@ -368,5 +553,7 @@ if __name__ == '__main__':
 	'momentum': 0.9
 	}
 
-	model = FCN32(config)
+	#model = FCN32(config)
+	#model = FCN16(config)
+	model = FCN8(config)
 

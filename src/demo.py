@@ -8,6 +8,7 @@ import tensorflow as tf
 from Model import FCN32
 from Dataloader import Dataloader
 import matplotlib.pyplot as plt
+import cv2
 import ipdb
 
 
@@ -22,7 +23,7 @@ CLASSES = ('__background__',
            'sheep', 'sofa', 'train', 'tvmonitor')
 
 config = {
-'batch_num':1, 
+'batch_num':5, 
 'iter':100000, 
 'num_classes':21, 
 'max_size':(640,640),
@@ -33,10 +34,11 @@ config = {
 
 if __name__ == '__main__':
 	model = FCN32(config)
-	data_loader = Dataloader('train', config['batch_num'])
+	data_loader = Dataloader('val', config['batch_num'])
 
 	saver = tf.train.Saver()
-	ckpt = '../model/FCN32_5e-3_iter_5000.ckpt'
+	ckpt = '../model/FCN32_5e-3_iter_10000.ckpt'
+	dump_path = '../demo/'
 
 	with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 		saver.restore(session, ckpt)
@@ -55,6 +57,10 @@ if __name__ == '__main__':
 			gt   = minibatch[1][i][:,:,0]
 			f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 			ax1.imshow(seg)
-			ax2.imshow(img)
+			img = img + MEAN_PIXEL
+			ax2.imshow(img[:,:,::-1])
 			ax3.imshow(gt)
 			plt.show()
+			cv2.imwrite(dump_path + str(i) + '_seg.png', seg)
+			cv2.imwrite(dump_path + str(i) + '_img.png', img)
+
