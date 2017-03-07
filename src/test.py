@@ -67,3 +67,5 @@ if __name__ == '__main__':
 			im_name = data_loader._seg_at(i).split('/')[-1]
 			cv2.imwrite(join(rgb_path, im_name), seg_rgb[:,:,::-1])
 			cv2.imwrite(join(gray_path, im_name), seg_valid)
+
+			print str(i) + '/' + str(data_loader.num_images) + ' done!'

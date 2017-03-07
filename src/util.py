@@ -90,7 +90,7 @@ def seg_gray_to_rgb(seg, gray_to_rgb):
 			r, g, b = gray_to_rgb[seg[i, j]]
 			rgb[i, j, 0] = r
 			rgb[i, j, 1] = g
-			rgb[i, i, 2] = b
+			rgb[i, j, 2] = b
 
 	return rgb
 
