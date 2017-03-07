@@ -6,16 +6,13 @@
 import ipdb
 import numpy as np
 from os.path import join
-from util import colormap, prep_im_for_blob
+from util import colormap, prep_im_for_blob, prep_im, prep_run_wrapper
 import multiprocessing
 
 """
 The Dataloader for VOC2011 to load and preprocess input image and segmentation
 ground truth. (Only)
 """
-def prep_run_wrapper(args):
-	return prep_im_for_blob(*args)
-
 class Dataloader(object):
 	def __init__(self, split, batch_num):
 		# Validate split input
@@ -53,7 +50,7 @@ class Dataloader(object):
 		img_blobs = []
 		seg_blobs = []
 		mask_blobs = []
-		process_size = 5
+		process_size = self.batch_num
 		# process mini_batch as 5 process, require that the number of 
 		# sample in a mini_batch is a multiplying of 5
 		for _ in xrange(self.batch_num/process_size):
@@ -84,9 +81,34 @@ class Dataloader(object):
 
 		return [img_blobs, seg_blobs, mask_blobs]
 
+"""No shuffle, fix batch num to 1"""
+class Dataloader_test(Dataloader):
+	def __init__(self, split):
+		# Validate split input
+		if split != 'train' and split != 'val' and split != 'trainval' and split != 'test':
+			raise Exception('Please enter valid split variable!')
+
+		root = '../data/VOCdevkit/VOC2011/'
+		self.img_path = join(root, 'JPEGImages/')
+		self.seg_path = join(root, 'SegmentationClass/')
+		self.split = split
+		img_set = join(root, 'ImageSets/Segmentation/' + split + '.txt')
+		with open(img_set) as f:
+			self.img_list = f.read().rstrip().split('\n')
+
+		self.num_images = len(self.img_list)
+		self.batch_num = 1
+		self.temp_pointer = 0    # First idx of the current batch
+
+		# Create double side mappings
+		self.gray_to_rgb, self.rgb_to_gray = colormap()
+
 
 if __name__ == '__main__':
-	dataloader = Dataloader('train', 5)
-	feed_dict = dataloader.get_next_minibatch()
+	# dataloader = Dataloader('train', 10)
+	# minibatch = dataloader.get_next_minibatch()
+	dataloader = Dataloader_test('train')
+	minibatch = dataloader.get_next_minibatch()
+
 
 	ipdb.set_trace()

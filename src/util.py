@@ -10,7 +10,7 @@ import ipdb
 # BGR mean pixel value
 MEAN_PIXEL = np.array([103.939, 116.779, 123.68])
 
-"""Padding image and segmentation ground truth to (600, 600)"""
+"""Padding image and segmentation ground truth to (640, 640)"""
 def prep_im_for_blob(im_name, seg_name, rgb_to_gray, max_size=(640,640)):
 	im = cv2.imread(im_name)    # OpenCV color map default BGR
 	im = im - MEAN_PIXEL
@@ -33,6 +33,11 @@ def prep_im_for_blob(im_name, seg_name, rgb_to_gray, max_size=(640,640)):
 
 	return {'im_blob':im_blob, 'seg_blob':seg_blob, 'mask':mask}
 
+"""Minus mean pixel value"""
+def prep_im(im_name):
+	im = cv2.imread(im_name)    # OpenCV color map default BGR
+	im = np.array([im - MEAN_PIXEL])
+	return im
 
 """Create color mappings, check VOClabelcolormap.m for reference"""
 def colormap(N=256):
@@ -56,6 +61,38 @@ def colormap(N=256):
 		rgb_to_gray[val] = key
 
 	return gray_to_rgb, rgb_to_gray
+
+"""For multi-processing dataloader"""
+def prep_run_wrapper(args):
+	return prep_im_for_blob(*args)
+
+"""Get original size"""
+def get_original_size(mask, max_size=(640,640)):
+	for i in range(max_size[0]-1, -1, -1):
+		if mask[i,0,0] == 1:
+			row = i + 1
+			break
+
+	for i in range(max_size[1]-1, -1, -1):
+		if mask[0,i,0] == 1:
+			col = i + 1
+			break
+
+	return row, col
+
+"""Transform gray scale segmentation result to rgb format"""
+def seg_gray_to_rgb(seg, gray_to_rgb):
+	row, col = seg.shape
+	rgb = np.zeros((row, col, 3))
+
+	for i in range(row):
+		for j in range(col):
+			r, g, b = gray_to_rgb[seg[i, j]]
+			rgb[i, j, 0] = r
+			rgb[i, j, 1] = g
+			rgb[i, i, 2] = b
+
+	return rgb
 
 
 """
