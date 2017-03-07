@@ -5,7 +5,7 @@
 
 import numpy as np
 import tensorflow as tf
-from Model import FCN32
+from Model import FCN32_test
 from Dataloader import Dataloader
 import matplotlib.pyplot as plt
 import cv2
@@ -33,11 +33,16 @@ config = {
 }
 
 if __name__ == '__main__':
-	model = FCN32(config)
+	model = FCN32_test(config)
 	data_loader = Dataloader('val', config['batch_num'])
 
 	saver = tf.train.Saver()
-	ckpt = '../model/FCN32_5e-3_iter_10000.ckpt'
+	ckpt = '../model/FCN32_adam_iter_20000.ckpt'
+	# Extract ckpt into npy, if needed
+	# with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
+		# model.extract(ckpt, session, saver)
+	# ipdb.set_trace()
+
 	dump_path = '../demo/'
 
 	with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:

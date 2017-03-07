@@ -301,10 +301,26 @@ class FCN32(Network):
 
 	def set_up(self):
 		self.add_conv(self.img, self.num_classes)
-		self.add_deconv(bilinear=True)
+		self.add_deconv(bilinear=False)
 		self.add_loss_op()
 		self.add_weight_decay()
 		self.add_train_op()
+
+	"""Extract parameters from ckpt file to npy file"""
+	def extract(self, data_path, session, saver):
+		saver.restore(session, data_path)
+		scopes = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2', 'conv3_1',
+		'conv3_2', 'conv3_3', 'conv4_1', 'conv4_2', 'conv4_3', 'conv5_1',
+		'conv5_2', 'conv5_3', 'conv6', 'conv7', 'conv8']
+		data_dict = {}
+		for scope in scopes:
+			[w, b] = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
+			data_dict[scope] = {'weights':w.eval(), 'biases':b.eval()}
+		file_name = data_path[0:-5]
+		np.save(file_name, data_dict)
+		ipdb.set_trace()
+		return file_name + '.npy'
+
 
 	"""Add the deconv(upsampling) layer to get dense prediction"""
 	def add_deconv(self, bilinear=False):
@@ -353,8 +369,9 @@ class FCN32(Network):
 
 	"""Set up training optimization"""
 	def add_train_op(self):
-		self.train_op = tf.train.MomentumOptimizer(self.base_lr, 
-			self.momentum).minimize(self.loss)
+		# self.train_op = tf.train.MomentumOptimizer(self.base_lr, 
+			# self.momentum).minimize(self.loss)
+		self.train_op = tf.train.AdamOptimizer(self.base_lr).minimize(self.loss)
 
 
 """A better model"""
@@ -365,12 +382,12 @@ class FCN16(FCN32):
 	def set_up(self):
 		self.add_conv(self.img, self.num_classes)
 		self.add_shortcut(bilinear=True)
-		self.add_deconv(bilinear=True)
+		self.add_deconv(bilinear=False)
 		self.add_loss_op()
 		self.add_weight_decay()
 		self.add_train_op()
 
-	def add_shortcut(self, bilinear=False):
+	def add_shortcut(self, bilinear=True):
 		conv8 = self.get_output('conv8')
 		target_size = 2 * int(conv8.get_shape()[1])
 
@@ -542,13 +559,37 @@ class FCN8(FCN16):
 		self.layers['deconv']  = {'weights':w_deconv, 'biases':b_deconv}
 
 
+class FCN32_test(FCN32):
+	def __init__(self, config):
+		FCN32.__init__(self, config)
+
+	def set_up(self):
+		self.add_conv(self.img, self.num_classes)
+		self.add_deconv(bilinear=False)
+
+
+class FCN16_test(FCN16):
+	def __init__(self, config):
+		FCN16.__init__(self, config)
+
+	def set_up(self):
+		self.add_conv(self.img, self.num_classes)
+		self.add_shortcut(bilinear=True)
+		self.add_deconv(bilinear=False)
+
+
+class FCN8_test(FCN16_test):
+	def __init__(self, config):
+		FCN16_test.__init__(self, config)
+
+
 if __name__ == '__main__':
 	config = {
 	'batch_num':5, 
 	'iter':100000, 
 	'num_classes':21, 
 	'max_size':(640,640),
-	'weight_decay': 0.0005,
+	'weight_decay': 0.0001,
 	'base_lr': 0.005,
 	'momentum': 0.9
 	}

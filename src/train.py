@@ -5,7 +5,7 @@
 
 import numpy as np
 import tensorflow as tf
-from Model import FCN32
+from Model import FCN32, FCN16, FCN8
 from Dataloader import Dataloader
 import ipdb
 
@@ -15,7 +15,7 @@ config = {
 'iter':100000, 
 'num_classes':21, 
 'max_size':(640,640),
-'weight_decay': 0.0005,
+'weight_decay': 0.0001,
 'base_lr': 0.001,
 'momentum': 0.9
 }
@@ -49,9 +49,14 @@ if __name__ == '__main__':
 			if i % 20 == 0 and i != 0:
 				loss /= 20
 				print 'Iter: {}'.format(i) + '/{}'.format(config['iter']) + ', loss = ' + str(loss)
+
+				# Learning rate decay
+				if loss <= 0.4:
+					model.base_lr /= 10
+					
 				loss = 0
 
 			# Write to saver
 			if i % 5000 == 0 and i != 0:
-				saver.save(session, '../model/FCN32_1e-3_iter_'+str(i)+'.ckpt')
+				saver.save(session, '../model/FCN16_adam_iter_'+str(i)+'.ckpt')
 
