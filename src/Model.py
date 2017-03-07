@@ -578,9 +578,14 @@ class FCN16_test(FCN16):
 		self.add_deconv(bilinear=False)
 
 
-class FCN8_test(FCN16_test):
+class FCN8_test(FCN8):
 	def __init__(self, config):
-		FCN16_test.__init__(self, config)
+		FCN8.__init__(self, config)
+
+	def set_up(self):
+		self.add_conv(self.img, self.num_classes)
+		self.add_shortcut(bilinear=True)
+		self.add_deconv(bilinear=False)
 
 
 if __name__ == '__main__':

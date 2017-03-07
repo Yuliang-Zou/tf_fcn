@@ -27,6 +27,9 @@ if __name__ == '__main__':
 
 	# Set up model and data loader
 	model = FCN32(config)
+	loss_list = []
+	f = open('./FCN32.txt')
+	DECAY = False    # decay flag
 	init = tf.initialize_all_variables()
 
 	data_loader = Dataloader('train', config['batch_num'])
@@ -45,18 +48,25 @@ if __name__ == '__main__':
 			_, temp_loss = session.run([model.train_op, model.loss], feed_dict=feed_dict)
 			loss += temp_loss
 
+			loss_list.append(temp_loss)
+			f.write(str(temp_loss) + '\n')
+
+			# Learning rate decay
+			if len(loss_list) > 100 and not DECAY:
+				avg = sum(loss_list[-100::]) / 100.0
+				if avg <= 0.4:
+					model.base_lr /= 10
+					DECAY = True
+
 			# Monitor
 			if i % 20 == 0 and i != 0:
 				loss /= 20
-				print 'Iter: {}'.format(i) + '/{}'.format(config['iter']) + ', loss = ' + str(loss)
-
-				# Learning rate decay
-				if loss <= 0.4:
-					model.base_lr /= 10
-					
+				print 'Iter: {}'.format(i) + '/{}'.format(config['iter']) + ', loss = ' + str(loss)					
 				loss = 0
 
 			# Write to saver
 			if i % 5000 == 0 and i != 0:
-				saver.save(session, '../model/FCN16_adam_iter_'+str(i)+'.ckpt')
+				saver.save(session, '../model/FCN32_adam_iter_'+str(i)+'.ckpt')
+
+	f.close()
 
