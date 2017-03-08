@@ -51,7 +51,7 @@ if __name__ == '__main__':
 		print 'Model restored.'
 
 		# Iterate the whole set once
-		for i in range(831, data_loader.num_images):
+		for i in range(data_loader.num_images):
 			minibatch = data_loader.get_minibatch_at(i)
 			feed_dict = {model.img: minibatch[0]}
 			pred = session.run(model.get_output('deconv'), feed_dict=feed_dict)
@@ -59,10 +59,7 @@ if __name__ == '__main__':
 			mask = minibatch[2][0]
 			seg  = np.argmax(pred[0], axis=2)
 
-			# row, col = get_original_size(mask)    # sometime not works
-			name = data_loader._seg_at(i)
-			im = cv2.imread(name)
-			row, col, _ = im.shape
+			row, col = minibatch[3]
 			seg_valid = np.zeros((row, col))
 			seg_valid[:, :] = seg[0:row, 0:col]
 			seg_rgb = seg_gray_to_rgb(seg_valid, data_loader.gray_to_rgb)

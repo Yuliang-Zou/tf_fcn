@@ -114,6 +114,7 @@ class Dataloader_test(Dataloader):
 		img_blob = data['im_blob']
 		# seg_blob = data['seg_blob']
 		mask = data['mask']
+		ori_size = data['original_size']
 
 		img_blobs = np.array([img_blob])
 		# seg_blobs = np.array([seg_blob])
@@ -121,7 +122,7 @@ class Dataloader_test(Dataloader):
 		seg_blobs = None
 		# mask_blobs = None
 
-		return [img_blobs, seg_blobs, mask_blobs]
+		return [img_blobs, seg_blobs, mask_blobs, ori_size]
 
 
 """Small size dataloader"""
@@ -172,7 +173,7 @@ class Dataloader_small(Dataloader):
 if __name__ == '__main__':
 	# dataloader = Dataloader('train', 10)
 	# minibatch = dataloader.get_next_minibatch()
-	dataloader = Dataloader_test('train')
+	dataloader = Dataloader_test('val')
 	minibatch = dataloader.get_next_minibatch()
 
 

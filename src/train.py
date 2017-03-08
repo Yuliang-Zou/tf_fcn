@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
 			loss_list.append(temp_loss)
 			f.write(str(temp_loss) + '\n')
+			print str(i) + ': ' + str(temp_loss)
 
 			# Learning rate decay
 			if len(loss_list) > 100 and not DECAY:
