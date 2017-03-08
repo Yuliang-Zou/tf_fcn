@@ -123,8 +123,8 @@ class Dataloader_test(Dataloader):
 
 """Small size dataloader"""
 class Dataloader_small(Dataloader):
-	def __init__(self, split):
-		Dataloader.__init__(self, split)
+	def __init__(self, split, batch_num):
+		Dataloader.__init__(self, split, batch_num)
 
 	"""Override"""
 	def get_next_minibatch(self):
@@ -150,7 +150,8 @@ class Dataloader_small(Dataloader):
 
 			p = multiprocessing.Pool(process_size)
 
-			temp_result = p.map(prep_run_wrapper, zip(temp_imName, temp_segName, temp_map))
+			# Use prep_small_run_wrapper instead!
+			temp_result = p.map(prep_small_run_wrapper, zip(temp_imName, temp_segName, temp_map))
 			p.close()
 			p.join()
 

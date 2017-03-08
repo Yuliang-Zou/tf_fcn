@@ -104,6 +104,8 @@ def colormap(N=256):
 
 """Get original size"""
 def get_original_size(mask, max_size=(640,640)):
+	row = None
+	col = None
 	for i in range(max_size[0]-1, -1, -1):
 		if mask[i,0,0] == 1:
 			row = i + 1
@@ -114,6 +116,8 @@ def get_original_size(mask, max_size=(640,640)):
 			col = i + 1
 			break
 
+	if row is None or col is None:
+		ipdb.set_trace()
 	return row, col
 
 """Transform gray scale segmentation result to rgb format"""
