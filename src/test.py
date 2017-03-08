@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
 		# Iterate the whole set once
 		for i in range(data_loader.num_images):
-			minibatch = data_loader.get_next_minibatch()
+			minibatch = data_loader.get_minibatch_at(i)
 			feed_dict = {model.img: minibatch[0]}
 			pred = session.run(model.get_output('deconv'), feed_dict=feed_dict)
 

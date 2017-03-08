@@ -103,6 +103,67 @@ class Dataloader_test(Dataloader):
 		# Create double side mappings
 		self.gray_to_rgb, self.rgb_to_gray = colormap()
 
+	"""Get minibatch by index"""
+	def get_minibatch_at(self, i):
+		img_name = self._img_at(i)
+		seg_name = self._seg_at(i)
+		data = prep_im_for_blob(img_name, seg_name, self.rgb_to_gray)
+		img_blob = data['im_blob']
+		# seg_blob = data['seg_blob']
+		mask = data['mask']
+
+		img_blobs = np.array([img_blob])
+		# seg_blobs = np.array([seg_blob])
+		mask_blobs = np.array([mask])
+		seg_blobs = None
+		# mask_blobs = None
+
+		return [img_blobs, seg_blobs, mask_blobs]
+
+
+"""Small size dataloader"""
+class Dataloader_small(Dataloader):
+	def __init__(self, split):
+		Dataloader.__init__(self, split)
+
+	"""Override"""
+	def get_next_minibatch(self):
+		img_blobs = []
+		seg_blobs = []
+		mask_blobs = []
+		ori_sizes = []
+
+		process_size = 5
+		# process mini_batch as 5 process, require that the number of 
+		# sample in a mini_batch is a multiplying of 5
+		for _ in xrange(self.batch_num/process_size):
+			# Permutate the data again
+
+			if self.temp_pointer+process_size > self.num_images:
+				self.temp_pointer = 0
+				self._shuffle()
+
+			temp_range = range(self.temp_pointer, self.temp_pointer+process_size, 1)
+			temp_imName = [self._img_at(x) for x in temp_range]
+			temp_segName = [self._seg_at(x) for x in temp_range]
+			temp_map = [self.rgb_to_gray,]*process_size
+
+			p = multiprocessing.Pool(process_size)
+
+			temp_result = p.map(prep_run_wrapper, zip(temp_imName, temp_segName, temp_map))
+			p.close()
+			p.join()
+
+			for x in temp_result:
+				img_blobs.append(x['im_blob'])
+				seg_blobs.append(x['seg_blob'])
+				mask_blobs.append(x['mask'])
+				ori_sizes.append(x['original_size'])
+
+			self.temp_pointer += process_size
+
+
+		return [img_blobs, seg_blobs, mask_blobs, ori_sizes]
 
 if __name__ == '__main__':
 	# dataloader = Dataloader('train', 10)

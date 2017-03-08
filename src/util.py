@@ -39,6 +39,46 @@ def prep_im(im_name):
 	im = np.array([im - MEAN_PIXEL])
 	return im
 
+"""For multi-processing dataloader"""
+def prep_run_wrapper(args):
+	return prep_im_for_blob(*args)
+
+"""Resize input image to (256, 256)"""
+def prep_small_im_for_blob(im_name, seg_name, rgb_to_gray, max_size=(256,256)):
+	im = cv2.imread(im_name)    # OpenCV color map default BGR
+	seg = cv2.imread(seg_name)[:,:,::-1]
+
+	row, col, _ = im.shape
+	im_blob = np.zeros((max_size[0], max_size[1], 3))
+	im_blob = cv2.resize(im, max_size, interpolation=cv2.INTER_NEAREST)
+	im_blob = im_blob - MEAN_PIXEL
+
+
+	seg_gray = np.zeros((row, col))
+	seg_blob = np.zeros((max_size[0], max_size[1]))
+	mask = np.zeros_like(seg_blob)
+
+	for i in xrange(row):
+		for j in xrange(col):
+			seg_gray[i,j] = rgb_to_gray[tuple(seg[i,j])]
+	seg_blob = cv2.resize(seg_gray, max_size, interpolation=cv2.INTER_NEAREST)
+
+	for i in xrange(max_size[0]):
+		for j in xrange(max_size[1]):
+			if seg_blob[i,j] != 255:
+				mask[i, j] = 1
+			else:
+				seg_blob[i,j] = 0
+	seg_blob = np.array([seg_blob]).transpose((1,2,0))
+	mask = np.array([mask]).transpose((1,2,0))
+
+	return {'im_blob':im_blob, 'seg_blob':seg_blob, 'mask':mask, 'original_size':(row,col)}
+
+"""For multi-processing dataloader"""
+def prep_small_run_wrapper(args):
+	return prep_small_im_for_blob(*args)
+
+
 """Create color mappings, check VOClabelcolormap.m for reference"""
 def colormap(N=256):
 	# Create double side mappings
@@ -61,10 +101,6 @@ def colormap(N=256):
 		rgb_to_gray[val] = key
 
 	return gray_to_rgb, rgb_to_gray
-
-"""For multi-processing dataloader"""
-def prep_run_wrapper(args):
-	return prep_im_for_blob(*args)
 
 """Get original size"""
 def get_original_size(mask, max_size=(640,640)):
@@ -145,10 +181,13 @@ if __name__ == '__main__':
 	seg_name = root + 'SegmentationClass/2007_000033.png'
 	_, rgb_to_gray = colormap()
 
-	im_blob, seg_blob = prep_im_for_blob(im_name, seg_name, rgb_to_gray)
+	# im_blob, seg_blob = prep_im_for_blob(im_name, seg_name, rgb_to_gray)
+	data = prep_small_im_for_blob(im_name, seg_name, rgb_to_gray)
 	import matplotlib.pyplot as plt
+	im_blob = data['im_blob']
+	seg_blob = data['seg_blob']
 	plt.imshow(im_blob)
 	plt.show()
-	plt.imshow(seg_blob)
+	plt.imshow(seg_blob[:,:,0])
 	plt.show()
 	ipdb.set_trace()
