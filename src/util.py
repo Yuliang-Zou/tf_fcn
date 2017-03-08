@@ -31,7 +31,7 @@ def prep_im_for_blob(im_name, seg_name, rgb_to_gray, max_size=(640,640)):
 			else:
 				seg_blob[i,j] = 0
 
-	return {'im_blob':im_blob, 'seg_blob':seg_blob, 'mask':mask}
+	return {'im_blob':im_blob, 'seg_blob':seg_blob, 'mask':mask, 'original_size':(row,col)}
 
 """Minus mean pixel value"""
 def prep_im(im_name):

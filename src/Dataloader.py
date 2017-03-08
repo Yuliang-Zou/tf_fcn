@@ -6,7 +6,7 @@
 import ipdb
 import numpy as np
 from os.path import join
-from util import colormap, prep_im_for_blob, prep_im, prep_run_wrapper
+from util import colormap, prep_im_for_blob, prep_run_wrapper, prep_small_run_wrapper
 import multiprocessing
 
 """
@@ -50,6 +50,8 @@ class Dataloader(object):
 		img_blobs = []
 		seg_blobs = []
 		mask_blobs = []
+		ori_sizes = []
+
 		process_size = self.batch_num
 		# process mini_batch as 5 process, require that the number of 
 		# sample in a mini_batch is a multiplying of 5
@@ -75,11 +77,12 @@ class Dataloader(object):
 				img_blobs.append(x['im_blob'])
 				seg_blobs.append(x['seg_blob'])
 				mask_blobs.append(x['mask'])
+				ori_sizes.append(x['original_size'])
 
 			self.temp_pointer += process_size
 
 
-		return [img_blobs, seg_blobs, mask_blobs]
+		return [img_blobs, seg_blobs, mask_blobs, ori_sizes]
 
 """No shuffle, fix batch num to 1"""
 class Dataloader_test(Dataloader):
