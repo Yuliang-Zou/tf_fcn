@@ -32,7 +32,7 @@ if __name__ == '__main__':
 	DECAY = False    # decay flag
 	init = tf.initialize_all_variables()
 
-	data_loader = Dataloader_small('train', config['batch_num'])
+	data_loader = Dataloader_small('train', config)
 
 	with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 		session.run(init)
