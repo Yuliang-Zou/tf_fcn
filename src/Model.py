@@ -90,7 +90,7 @@ class Network(object):
 			a_conv1_2 = tf.nn.relu(z_conv1_2)
 		
 		pool1 = tf.nn.max_pool(a_conv1_2, ksize=[1,2,2,1], strides=[1,2,2,1],
-			padding='VALID', name='pool1')
+			padding='SAME', name='pool1')
 
 		# Conv2
 		with tf.variable_scope('conv2_1') as scope:
@@ -112,7 +112,7 @@ class Network(object):
 			a_conv2_2 = tf.nn.relu(z_conv2_2)
 
 		pool2 = tf.nn.max_pool(a_conv2_2, ksize=[1,2,2,1], strides=[1,2,2,1],
-			padding='VALID', name='pool2')
+			padding='SAME', name='pool2')
 
 		# Conv3
 		with tf.variable_scope('conv3_1') as scope:
@@ -143,7 +143,7 @@ class Network(object):
 			a_conv3_3 = tf.nn.relu(z_conv3_3)
 
 		pool3 = tf.nn.max_pool(a_conv3_3, ksize=[1,2,2,1], strides=[1,2,2,1],
-			padding='VALID', name='pool3')
+			padding='SAME', name='pool3')
 
 		# Conv4
 		with tf.variable_scope('conv4_1') as scope:
@@ -174,7 +174,7 @@ class Network(object):
 			a_conv4_3 = tf.nn.relu(z_conv4_3)
 
 		pool4 = tf.nn.max_pool(a_conv4_3, ksize=[1,2,2,1], strides=[1,2,2,1],
-			padding='VALID', name='pool4')
+			padding='SAME', name='pool4')
 
 		# Conv5
 		with tf.variable_scope('conv5_1') as scope:
@@ -205,7 +205,7 @@ class Network(object):
 			a_conv5_3 = tf.nn.relu(z_conv5_3)
 
 		pool5 = tf.nn.max_pool(a_conv5_3, ksize=[1,2,2,1], strides=[1,2,2,1],
-			padding='VALID', name='pool5')
+			padding='SAME', name='pool5')
 
 		# Transform fully-connected layers to convolutional layers
 		with tf.variable_scope('conv6') as scope:
@@ -593,13 +593,13 @@ if __name__ == '__main__':
 	'batch_num':5, 
 	'iter':100000, 
 	'num_classes':21, 
-	'max_size':(640,640),
+	'max_size':(500,500),
 	'weight_decay': 0.0001,
 	'base_lr': 0.005,
 	'momentum': 0.9
 	}
 
-	#model = FCN32(config)
+	model = FCN32(config)
 	#model = FCN16(config)
-	model = FCN8(config)
+	# model = FCN8(config)
 
