@@ -29,7 +29,7 @@ if __name__ == '__main__':
 	split = 'val'
 	model = FCN8_test(config)
 	# Import, since we don't want the random shuffle
-	data_loader = Dataloader_test(split)
+	data_loader = Dataloader_test(split, config)
 
 	saver = tf.train.Saver()
 	ckpt = '../model/FCN8_adam_iter_10000.ckpt'
