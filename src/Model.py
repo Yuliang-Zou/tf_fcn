@@ -564,7 +564,7 @@ class FCN32_test(FCN32):
 		FCN32.__init__(self, config)
 
 	def set_up(self):
-		self.add_conv(self.img, self.num_classes)
+		self.add_conv(self.img, self.num_classes, 'TEST')
 		self.add_deconv(bilinear=False)
 
 
@@ -573,7 +573,7 @@ class FCN16_test(FCN16):
 		FCN16.__init__(self, config)
 
 	def set_up(self):
-		self.add_conv(self.img, self.num_classes)
+		self.add_conv(self.img, self.num_classes, 'TEST')
 		self.add_shortcut(bilinear=True)
 		self.add_deconv(bilinear=False)
 
@@ -583,7 +583,7 @@ class FCN8_test(FCN8):
 		FCN8.__init__(self, config)
 
 	def set_up(self):
-		self.add_conv(self.img, self.num_classes)
+		self.add_conv(self.img, self.num_classes, 'TEST')
 		self.add_shortcut(bilinear=True)
 		self.add_deconv(bilinear=False)
 

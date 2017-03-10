@@ -5,8 +5,8 @@
 
 import numpy as np
 import tensorflow as tf
-from Model import FCN32_test
-from Dataloader import Dataloader
+from Model import FCN32_test, FCN16_test, FCN8_test
+from Dataloader import Dataloader, Dataloader_small
 import matplotlib.pyplot as plt
 import cv2
 import ipdb
@@ -34,7 +34,7 @@ config = {
 
 if __name__ == '__main__':
 	model = FCN32_test(config)
-	data_loader = Dataloader('val', config['batch_num'])
+	data_loader = Dataloader('val', config)
 
 	saver = tf.train.Saver()
 	ckpt = '../model/FCN32_adam_iter_20000.ckpt'
@@ -60,7 +60,7 @@ if __name__ == '__main__':
 			seg  = np.argmax(pred[i], axis=2)
 			img  = minibatch[0][i]
 			gt   = minibatch[1][i][:,:,0]
-			f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
+			f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=False)
 			ax1.imshow(seg)
 			img = img + MEAN_PIXEL
 			ax2.imshow(img[:,:,::-1])
