@@ -387,6 +387,22 @@ class FCN16(FCN32):
 		self.add_weight_decay()
 		self.add_train_op()
 
+	"""Extract parameters from ckpt file to npy file"""
+	def extract(self, data_path, session, saver):
+		saver.restore(session, data_path)
+		scopes = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2', 'conv3_1',
+		'conv3_2', 'conv3_3', 'conv4_1', 'conv4_2', 'conv4_3', 'conv5_1',
+		'conv5_2', 'conv5_3', 'conv6', 'conv7', 'conv8', '2x_conv8', 
+		'pool4_1x1']
+		data_dict = {}
+		for scope in scopes:
+			[w, b] = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
+			data_dict[scope] = {'weights':w.eval(), 'biases':b.eval()}
+		file_name = data_path[0:-5]
+		np.save(file_name, data_dict)
+		ipdb.set_trace()
+		return file_name + '.npy'
+
 	def add_shortcut(self, bilinear=True):
 		conv8 = self.get_output('conv8')
 		pool4 = self.get_output('pool4')
