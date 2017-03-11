@@ -15,20 +15,20 @@ config = {
 'iter':100000, 
 'num_classes':21, 
 'max_size':(640,640),
-'weight_decay': 0.0001,
-'base_lr': 0.001,
+'weight_decay': 0.0005,
+'base_lr': 0.0001,
 'momentum': 0.9
 }
 
 if __name__ == '__main__':
 	# Load pre-trained model
-	model_path = '../model/VGG_imagenet.npy'
+	model_path = '../model/FCN32_adam_iter_20000_500.npy'
 	data_dict = np.load(model_path).item()
 
 	# Set up model and data loader
-	model = FCN32(config)
+	model = FCN16(config)
 	loss_list = []
-	f = open('./FCN32.txt', 'w')
+	f = open('./FCN16.txt', 'w')
 	DECAY = False    # decay flag
 	init = tf.initialize_all_variables()
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
 			# Write to saver
 			if i % 5000 == 0 and i != 0:
-				saver.save(session, '../model/FCN32_adam_iter_'+str(i)+'.ckpt')
+				saver.save(session, '../model/FCN16_adam_iter_'+str(i)+'.ckpt')
 
 	f.close()
 

@@ -33,11 +33,11 @@ config = {
 }
 
 if __name__ == '__main__':
-	model = FCN32_test(config)
+	model = FCN8_test(config)
 	data_loader = Dataloader('val', config)
 
 	saver = tf.train.Saver()
-	ckpt = '../model/FCN32_adam_iter_20000.ckpt'
+	ckpt = '../model/FCN8_adam_iter_10000.ckpt'
 	# Extract ckpt into npy, if needed
 	# with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 		# model.extract(ckpt, session, saver)

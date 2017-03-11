@@ -15,8 +15,8 @@ config = {
 'iter':100000, 
 'num_classes':21, 
 'max_size':(256,256),
-'weight_decay': 0.0001,
-'base_lr': 0.001,
+'weight_decay': 0.005,
+'base_lr': 0.0001,
 'momentum': 0.9
 }
 

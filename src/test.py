@@ -20,7 +20,7 @@ config = {
 'num_classes':21, 
 'max_size':(640,640),
 'weight_decay': 0.0005,
-'base_lr': 0.001,
+'base_lr': 0.0001,
 'momentum': 0.9
 }
 
