@@ -389,7 +389,12 @@ class FCN16(FCN32):
 
 	def add_shortcut(self, bilinear=True):
 		conv8 = self.get_output('conv8')
-		target_size = 2 * int(conv8.get_shape()[1])
+		base_size = int(conv8.get_shape()[1])
+
+		if base_size % 2 == 0:
+			target_size = 2 * base_size
+		else:
+			target_size = 2 * base_size - 1
 
 		with tf.variable_scope('2x_conv8') as scope:
 			# Learn from scratch
@@ -460,7 +465,13 @@ class FCN8(FCN16):
 
 	def add_shortcut(self, bilinear=True):
 		conv8 = self.get_output('conv8')
-		target_size = 2 * int(conv8.get_shape()[1])
+		base_size = int(conv8.get_shape()[1])
+
+		# Deal with odd/even case
+		if base_size % 2 == 0:
+			target_size = 2 * base_size
+		else:
+			target_size = 2 * base_size - 1
 
 		with tf.variable_scope('2x_conv8') as scope:
 			# Learn from scratch
@@ -502,7 +513,11 @@ class FCN8(FCN16):
 			z_pool3 = tf.nn.conv2d(pool3, w_pool3, strides= [1, 1, 1, 1],
 				padding='SAME') + b_pool3
 
-		target_size *= 2
+		# Deal with odd/even cases
+		if target_size % 2 == 0:
+			target_size *= 2
+		else:
+			target_size = 2 * target_size - 1
 
 		with tf.variable_scope('2x_fusion') as scope:
 			# Learn from scratch
@@ -594,8 +609,8 @@ if __name__ == '__main__':
 	'iter':100000, 
 	'num_classes':21, 
 	'max_size':(500,500),
-	'weight_decay': 0.0001,
-	'base_lr': 0.005,
+	'weight_decay': 0.005,
+	'base_lr': 0.0001,
 	'momentum': 0.9
 	}
 
